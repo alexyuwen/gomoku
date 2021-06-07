@@ -28,7 +28,8 @@ const check_line = (...squares) => {
   (all_plays[squares[0]] == player || all_plays[squares[0]] == computer);
 };
 
-const check_horizontals = () => {
+const check_match = () => {
+  // Check horizontals
   for (i = 0; i < num_squares; i += side_length) {
     for (j = 0; j <= side_length - required_streak; j++) {
       // Create candidate streak
@@ -45,10 +46,8 @@ const check_horizontals = () => {
       }
     }
   }
-  return null;
-};
 
-const check_verticals = () => {
+  // Check verticals
   for (i = 0; i < side_length; i++) {
     for (j = 0; j <= (side_length - required_streak) * side_length; j += side_length) {
       // Create candidate streak
@@ -65,10 +64,8 @@ const check_verticals = () => {
       }
     }
   }
-  return null;
-};
 
-const check_downward_diagonals = () => {
+  // Check downward diagonals (left to right)
   for (i = 0; i <= side_length - required_streak; i++) {
     for (j = 0; j <= side_length - required_streak; j++) {
       // Create candidate streak
@@ -83,14 +80,12 @@ const check_downward_diagonals = () => {
           let square = i + j*side_length + k*(side_length + 1);
           document.querySelector(`#block_${square}`).classList.add("win");
         }
-        return all_plays[i + j];
+        return all_plays[i + j*side_length];
       }
     }
   }
-  return null;
-};
 
-const check_upward_diagonals = () => {
+  // Check upward diagonals (left to right)
   for (i = 0; i <= side_length - required_streak; i++) {
     for (j = side_length - 1; j >= required_streak - 1; j--) {
       // Create candidate streak
@@ -105,23 +100,10 @@ const check_upward_diagonals = () => {
           let square = i + j*side_length - k*(side_length - 1);
           document.querySelector(`#block_${square}`).classList.add("win");
         }
-        return all_plays[i + j];
+        return all_plays[i + j*side_length];
       }
     }
   }
-  return null;
-};
-
-
-const check_match = () => {
-  [check_horizontals, check_verticals, check_downward_diagonals, check_upward_diagonals].forEach(
-    func => {
-      let play = func();
-      if (play) {
-        return play;
-      }
-    }
-  )
   return "";
 };
 
