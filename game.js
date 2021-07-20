@@ -11,9 +11,33 @@ let all_plays = new Array(num_squares).fill("");
 let last_player_move = -1;
 
 // Currently focusing on Threat Level 1 patterns
-const horizontal_patterns = [
-  ["", "O", "O", "O", ""]
-];
+const patterns_by_threat_level = {
+  1: [
+    [["", "O", "O", "O", "O"], [0]],  // closed 4
+    [["O", "O", "O", "O", ""], [4]],
+    [["", "O", "O", "O", ""], [0, 4]],  // open 3
+    [["", "O", "", "O", "O", ""], [2, 5, 0]],  // semiopen 3
+    [["", "O", "O", "", "O", ""], [3, 0, 5]],
+  ],
+  2: [
+    [["X", "O", "O", "O", "", ""], [4, 5]],  // closed 3
+    [["X", "O", "O", "", "O", ""], [3, 5]],
+    [["X", "O", "", "O", "O", ""], [2, 5]],
+    [["X", "", "O", "O", "O", ""], [1, 5]],
+    [["", "", "O", "O", "O", "X"], [1, 0]],
+    [["", "O", "", "O", "O", "X"], [2, 0]],
+    [["", "O", "O", "", "O", "X"], [3, 0]],
+    [["", "O", "O", "O", "", "X"], [4, 0]],
+    [["", "O", "", "O", ""], [2, 0, 4]], // semiopen 2
+    [["", "O", "O", "", ""], [3, 0, 4]], // open 2
+    [["", "", "O", "O", ""], [1, 4, 0]],
+  ],
+};
+
+let all_patterns = [];
+for (const arr of Object.values(patterns_by_threat_level)) {
+  all_patterns.push(...arr);
+}
 
 const board = document.querySelector(".play-area");
 
@@ -34,13 +58,16 @@ const equal_arrays = (a, b) => {
 
 
 // Returns suggested move
-const check_horizontal = (i, streak_req) => {
+const check_for_threats = (i, streak_req) => {
+  let pattern, possible_plays, temp;
   const left_border = side_length * Math.floor(i / side_length);
-  for (j = Math.max(left_border, i - streak_req + 1); j < i; j++) {
-    let temp = all_plays.slice(j, j + streak_req);
-    for (p of horizontal_patterns) {
-      if (equal_arrays(p, temp)) {
-        return j;
+  for (j = Math.max(left_border, i - streak_req); j < i; j++) {
+    for (arr of all_patterns) {
+      pattern = arr[0];
+      possible_plays = arr[1];
+      temp = all_plays.slice(j, j + pattern.length);
+      if (equal_arrays(pattern, temp)) {
+        return j + possible_plays[0];
       }
     }
   }
@@ -222,9 +249,9 @@ const addPlayerMove = i => {
 
 const addComputerMove = () => {
   if (!is_board_full) {
-    let horizontal = check_horizontal(last_player_move, required_streak);
-    if (horizontal !== null) {
-      selected = horizontal;
+    let threat_responses = check_for_threats(last_player_move, required_streak);
+    if (threat_responses !== null) {
+      selected = threat_responses;
     }
     else {
       do {
