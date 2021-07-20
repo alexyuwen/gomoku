@@ -57,8 +57,7 @@ const equal_arrays = (a, b) => {
 };
 
 
-// Returns suggested move
-const check_for_threats = (i, streak_req) => {
+const check_horizontal_threats = (i, streak_req) => {
   let pattern, possible_plays, temp;
   const left_border = side_length * Math.floor(i / side_length);
   for (j = Math.max(left_border, i - streak_req); j < i; j++) {
@@ -72,18 +71,88 @@ const check_for_threats = (i, streak_req) => {
     }
   }
   return null;
+};
 
-  // for (i = Math.max(left_border, i - streak_req + 1); i < Math.min(right_border, i + streak_req - 1); i++) {
-  //   if (all_plays[i] == player) {
-  //     cont_streak++;
-  //   }
-  //   else {
-  //     cont_streak = 1
-  //   }
-  //   if (cont_streak == streak_req) {
-  //     return [i - streak_req + 1 , i];
-  //   }
-  // }
+
+const check_vertical_threats = (i, streak_req) => {
+  let pattern, possible_plays, temp;
+  const top_border = i % side_length;
+  for (j = Math.max(top_border, i - streak_req * side_length); j < i; j += side_length) {
+    for (arr of all_patterns) {
+      pattern = arr[0];
+      possible_plays = arr[1];
+      temp = [];
+      for (k = 0; k < pattern.length; k++) {
+        temp.push(all_plays[j + k * side_length]);
+      }
+      if (equal_arrays(pattern, temp)) {
+        return j + possible_plays[0] * side_length;
+      }
+    }
+  }
+  return null;
+};
+
+
+const check_up_diagonal_threats = (i, streak_req) => {
+  let pattern, possible_plays, temp;
+  let left_border = i;
+  while (left_border % side_length !== 0 && left_border < side_length * (side_length - 1)) {  // update left_border until we reach the left or bottom border
+    left_border += (side_length - 1);
+  }
+  for (j = Math.min(left_border, i + streak_req * (side_length - 1)); j > i; j -= (side_length - 1)) {
+    for (arr of all_patterns) {
+      pattern = arr[0];
+      possible_plays = arr[1];
+      temp = [];
+      for (k = 0; k < pattern.length; k++) {
+        temp.push(all_plays[j - k * (side_length - 1)]);
+      }
+      if (equal_arrays(pattern, temp)) {
+        return j - possible_plays[0] * (side_length - 1);
+      }
+    }
+  }
+  return null;
+};
+
+
+const check_down_diagonal_threats = (i, streak_req) => {
+  let pattern, possible_plays, temp;
+  let left_border = i;
+  while (left_border % side_length !== 0 && left_border >= side_length) {  // update left_border until we reach the left or top border
+    left_border -= (side_length + 1);
+  }
+  for (j = Math.max(left_border, i - streak_req * (side_length + 1)); j < i; j += (side_length + 1)) {
+    for (arr of all_patterns) {
+      pattern = arr[0];
+      possible_plays = arr[1];
+      temp = [];
+      for (k = 0; k < pattern.length; k++) {
+        temp.push(all_plays[j + k * (side_length + 1)]);
+      }
+      if (equal_arrays(pattern, temp)) {
+        return j + possible_plays[0] * (side_length + 1);
+      }
+    }
+  }
+  return null;
+};
+
+
+// Returns suggested move
+const check_for_threats = (i, streak_req) => {
+  let next_move = check_horizontal_threats(i, streak_req);
+  if (next_move === null) {
+    next_move = check_vertical_threats(i, streak_req);
+  }
+  if (next_move === null) {
+    next_move = check_up_diagonal_threats(i, streak_req);
+  }
+  if (next_move === null) {
+    next_move = check_down_diagonal_threats(i, streak_req);
+  }
+  return next_move;
 };
 
 
