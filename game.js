@@ -34,13 +34,13 @@ const patterns_by_threat_level = {
   ],
 };
 
+
 let all_patterns = [];
 for (const arr of Object.values(patterns_by_threat_level)) {
   all_patterns.push(...arr);
 }
 
 const board = document.querySelector(".play-area");
-
 const winner = document.getElementById("winner");
 
 
@@ -57,11 +57,11 @@ const equal_arrays = (a, b) => {
 };
 
 
-const check_horizontal_threats = (i, streak_req) => {
+const check_horizontal_threats = (i, streak_req, threat_level) => {
   let pattern, possible_plays, temp;
   const left_border = side_length * Math.floor(i / side_length);
   for (j = Math.max(left_border, i - streak_req); j < i; j++) {
-    for (arr of all_patterns) {
+    for (arr of patterns_by_threat_level[threat_level]) {
       pattern = arr[0];
       possible_plays = arr[1];
       temp = all_plays.slice(j, j + pattern.length);
@@ -74,11 +74,11 @@ const check_horizontal_threats = (i, streak_req) => {
 };
 
 
-const check_vertical_threats = (i, streak_req) => {
+const check_vertical_threats = (i, streak_req, threat_level) => {
   let pattern, possible_plays, temp;
   const top_border = i % side_length;
   for (j = Math.max(top_border, i - streak_req * side_length); j < i; j += side_length) {
-    for (arr of all_patterns) {
+    for (arr of patterns_by_threat_level[threat_level]) {
       pattern = arr[0];
       possible_plays = arr[1];
       temp = [];
@@ -94,14 +94,14 @@ const check_vertical_threats = (i, streak_req) => {
 };
 
 
-const check_up_diagonal_threats = (i, streak_req) => {
+const check_up_diagonal_threats = (i, streak_req, threat_level) => {
   let pattern, possible_plays, temp;
   let left_border = i;
   while (left_border % side_length !== 0 && left_border < side_length * (side_length - 1)) {  // update left_border until we reach the left or bottom border
     left_border += (side_length - 1);
   }
   for (j = Math.min(left_border, i + streak_req * (side_length - 1)); j > i; j -= (side_length - 1)) {
-    for (arr of all_patterns) {
+    for (arr of patterns_by_threat_level[threat_level]) {
       pattern = arr[0];
       possible_plays = arr[1];
       temp = [];
@@ -117,14 +117,14 @@ const check_up_diagonal_threats = (i, streak_req) => {
 };
 
 
-const check_down_diagonal_threats = (i, streak_req) => {
+const check_down_diagonal_threats = (i, streak_req, threat_level) => {
   let pattern, possible_plays, temp;
   let left_border = i;
   while (left_border % side_length !== 0 && left_border >= side_length) {  // update left_border until we reach the left or top border
     left_border -= (side_length + 1);
   }
   for (j = Math.max(left_border, i - streak_req * (side_length + 1)); j < i; j += (side_length + 1)) {
-    for (arr of all_patterns) {
+    for (arr of patterns_by_threat_level[threat_level]) {
       pattern = arr[0];
       possible_plays = arr[1];
       temp = [];
@@ -142,19 +142,23 @@ const check_down_diagonal_threats = (i, streak_req) => {
 
 // Returns suggested move
 const check_for_threats = (i, streak_req) => {
-  let next_move = check_horizontal_threats(i, streak_req);
-  if (next_move === null) {
-    next_move = check_vertical_threats(i, streak_req);
+  for (threat_level = 1; threat_level <= 2; threat_level++) {
+    let next_move = check_horizontal_threats(i, streak_req, threat_level);
+    if (next_move === null) {
+      next_move = check_vertical_threats(i, streak_req, threat_level);
+    }
+    if (next_move === null) {
+      next_move = check_up_diagonal_threats(i, streak_req, threat_level);
+    }
+    if (next_move === null) {
+      next_move = check_down_diagonal_threats(i, streak_req, threat_level);
+    }
+    if (next_move !== null) {
+      return next_move;
+    }
   }
-  if (next_move === null) {
-    next_move = check_up_diagonal_threats(i, streak_req);
-  }
-  if (next_move === null) {
-    next_move = check_down_diagonal_threats(i, streak_req);
-  }
-  return next_move;
+  return null;
 };
-
 
 
 check_board_complete = () => {
@@ -283,40 +287,21 @@ const adjust_border = (i) => {
   }
 };
 
-const create_grid = () => {
-  Array.from(document.getElementsByClassName("block")).forEach(block => {
-    block.style.width = `${play_area_length / side_length}px`;
-    block.style.height = `${play_area_length / side_length}px`;
-  });
-};
-
-const render_board = () => {
-  board.innerHTML = ""
-  board.style["gridTemplateColumns"] = "auto ".repeat(side_length).slice(0, -1);
-  all_plays.forEach((e, i) => {
-    board.innerHTML += `<div id="block_${i}" class="block" onclick="addPlayerMove(${i})">${all_plays[i]}</div>`;  // template literal
-
-    // Remove borders of outermost squares to create classic TTT look
-    adjust_border(i);
-    // Create grid
-    create_grid();
-
-    if (e == player || e == computer) {
-      document.querySelector(`#block_${i}`).classList.add("occupied");
-    }
-  });
-};
 
 const addPlayerMove = i => {
+  let block_played = document.getElementById(`block_${i}`);
   if (!is_board_full && all_plays[i] == "") {
     all_plays[i] = player;
     last_player_move = i;
+    block_played.innerHTML = "O";
+    block_played.classList.add("occupied");
     game_loop();
     addComputerMove();
   }
 };
 
 const addComputerMove = () => {
+  let block_played;
   if (!is_board_full) {
     let threat_responses = check_for_threats(last_player_move, required_streak);
     if (threat_responses !== null) {
@@ -330,6 +315,9 @@ const addComputerMove = () => {
     }
 
     all_plays[selected] = computer;
+    block_played = document.getElementById(`block_${selected}`);
+    block_played.innerHTML = "X";
+    block_played.classList.add("occupied");
     game_loop();
   }
 };
@@ -345,11 +333,29 @@ const reset_board = () => {
 };
 
 const game_loop = () => {
-  render_board();
   check_board_complete();
   check_for_winner();
 };
 
 
-// Initial render
+const create_grid = () => {
+  Array.from(document.getElementsByClassName("block")).forEach(block => {
+    block.style.width = `${play_area_length / side_length}px`;
+    block.style.height = `${play_area_length / side_length}px`;
+  });
+};
+
+
+const render_board = () => {
+  board.innerHTML = "";
+  for (i = 0; i < num_squares; i++) {
+    board.innerHTML += `<div id="block_${i}" class="block" onclick="addPlayerMove(${i})"></div>`;  // template literal
+    // Remove borders of outermost squares to create classic TTT look
+    adjust_border(i);
+  }
+  create_grid();
+};
+
+
+board.style["gridTemplateColumns"] = "auto ".repeat(side_length).slice(0, -1);
 render_board();
