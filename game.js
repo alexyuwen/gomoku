@@ -1,8 +1,10 @@
+const play_area_length = 600;
+
 const player = "O";
 const computer = "X";
-const side_length = 3;
+const side_length = 12;
 const num_squares = Math.pow(side_length, 2);
-const required_streak = 3;
+const required_streak = 5;
 
 let is_board_full = false;
 let all_plays = new Array(num_squares).fill("");
@@ -85,7 +87,7 @@ const check_match = () => {
     }
   }
 
-  // Check upward diagonals (left to right)
+  // Check downward diagonals (left to right)
   for (i = 0; i <= side_length - required_streak; i++) {
     for (j = side_length - 1; j >= required_streak - 1; j--) {
       // Create candidate streak
@@ -140,13 +142,14 @@ const adjust_border = (i) => {
 
 const create_grid = () => {
   Array.from(document.getElementsByClassName("block")).forEach(block => {
-    block.style.width = `${300 / side_length}px`;
-    block.style.height = `${300 / side_length}px`;
+    block.style.width = `${play_area_length / side_length}px`;
+    block.style.height = `${play_area_length / side_length}px`;
   });
 };
 
 const render_board = () => {
   board.innerHTML = ""
+  board.style["gridTemplateColumns"] = "auto ".repeat(side_length).slice(0, -1);
   all_plays.forEach((e, i) => {
     board.innerHTML += `<div id="block_${i}" class="block" onclick="addPlayerMove(${i})">${all_plays[i]}</div>`;  // template literal
 

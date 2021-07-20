@@ -27,9 +27,8 @@ h2 {
 
 .play-area {
   display: grid;
-  width: 300px;
-  height: 300px;
-  grid-template-columns: auto auto auto;
+  width: 600px;
+  height: 600px;
 }
 
 .block {
