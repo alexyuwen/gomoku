@@ -8,10 +8,57 @@ const required_streak = 5;
 
 let is_board_full = false;
 let all_plays = new Array(num_squares).fill("");
+let last_player_move = -1;
+
+// Currently focusing on Threat Level 1 patterns
+const horizontal_patterns = [
+  ["", "O", "O", "O", ""]
+];
 
 const board = document.querySelector(".play-area");
 
 const winner = document.getElementById("winner");
+
+
+const equal_arrays = (a, b) => {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+};
+
+
+// Returns suggested move
+const check_horizontal = (i, streak_req) => {
+  const left_border = side_length * Math.floor(i / side_length);
+  for (j = Math.max(left_border, i - streak_req + 1); j < i; j++) {
+    let temp = all_plays.slice(j, j + streak_req);
+    for (p of horizontal_patterns) {
+      if (equal_arrays(p, temp)) {
+        return j;
+      }
+    }
+  }
+  return null;
+
+  // for (i = Math.max(left_border, i - streak_req + 1); i < Math.min(right_border, i + streak_req - 1); i++) {
+  //   if (all_plays[i] == player) {
+  //     cont_streak++;
+  //   }
+  //   else {
+  //     cont_streak = 1
+  //   }
+  //   if (cont_streak == streak_req) {
+  //     return [i - streak_req + 1 , i];
+  //   }
+  // }
+};
+
 
 
 check_board_complete = () => {
@@ -164,9 +211,10 @@ const render_board = () => {
   });
 };
 
-const addPlayerMove = e => {
-  if (!is_board_full && all_plays[e] == "") {
-    all_plays[e] = player;
+const addPlayerMove = i => {
+  if (!is_board_full && all_plays[i] == "") {
+    all_plays[i] = player;
+    last_player_move = i;
     game_loop();
     addComputerMove();
   }
@@ -174,9 +222,17 @@ const addPlayerMove = e => {
 
 const addComputerMove = () => {
   if (!is_board_full) {
-    do {
-      selected = Math.floor(Math.random() * num_squares);
-    } while (all_plays[selected] != "");
+    let horizontal = check_horizontal(last_player_move, required_streak);
+    if (horizontal !== null) {
+      selected = horizontal;
+    }
+    else {
+      do {
+        selected = Math.floor(Math.random() * num_squares);
+      } 
+      while (all_plays[selected] != "");
+    }
+
     all_plays[selected] = computer;
     game_loop();
   }
