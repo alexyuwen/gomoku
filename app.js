@@ -64,7 +64,8 @@ const equal_arrays = (a, b) => {
 const check_horizontal_threats = (i, streak_req, threat_level) => {
   let pattern, possible_plays, temp;
   const left_border = side_length * Math.floor(i / side_length);
-  for (j = Math.max(left_border, i - streak_req); j < i; j++) {
+  const right_border = left_border + side_length - 1;
+  for (j = Math.max(left_border, i - streak_req); j <= Math.min(i, right_border - streak_req + 1); j++) {
     for (arr of patterns_by_threat_level[threat_level]) {
       pattern = arr[0];
       possible_plays = arr[1];
@@ -81,7 +82,8 @@ const check_horizontal_threats = (i, streak_req, threat_level) => {
 const check_vertical_threats = (i, streak_req, threat_level) => {
   let pattern, possible_plays, temp;
   const top_border = i % side_length;
-  for (j = Math.max(top_border, i - streak_req * side_length); j < i; j += side_length) {
+  const bottom_border = top_border + (side_length - 1) * side_length
+  for (j = Math.max(top_border, i - streak_req * side_length); j <= Math.min(i, bottom_border - (streak_req - 1) * side_length); j += side_length) {
     for (arr of patterns_by_threat_level[threat_level]) {
       pattern = arr[0];
       possible_plays = arr[1];
@@ -100,11 +102,15 @@ const check_vertical_threats = (i, streak_req, threat_level) => {
 
 const check_up_diagonal_threats = (i, streak_req, threat_level) => {
   let pattern, possible_plays, temp;
-  let left_border = i;
-  while (left_border % side_length !== 0 && left_border < side_length * (side_length - 1)) {  // update left_border until we reach the left or bottom border
-    left_border += (side_length - 1);
+  let bottom_left_border = i;
+  while (bottom_left_border % side_length !== 0 && bottom_left_border < num_squares - side_length) { 
+    bottom_left_border += (side_length - 1);
   }
-  for (j = Math.min(left_border, i + streak_req * (side_length - 1)); j > i; j -= (side_length - 1)) {
+  let upper_right_border = i;
+  while (upper_right_border >= side_length && upper_right_border % side_length !== side_length - 1) {
+    upper_right_border -= (side_length - 1)
+  }
+  for (j = Math.min(bottom_left_border, i + streak_req * (side_length - 1)); j >= Math.max(i, upper_right_border + (streak_req - 1) * (side_length - 1)); j -= (side_length - 1)) {
     for (arr of patterns_by_threat_level[threat_level]) {
       pattern = arr[0];
       possible_plays = arr[1];
@@ -123,11 +129,15 @@ const check_up_diagonal_threats = (i, streak_req, threat_level) => {
 
 const check_down_diagonal_threats = (i, streak_req, threat_level) => {
   let pattern, possible_plays, temp;
-  let left_border = i;
-  while (left_border % side_length !== 0 && left_border >= side_length) {  // update left_border until we reach the left or top border
-    left_border -= (side_length + 1);
+  let upper_left_border = i;
+  while (upper_left_border % side_length !== 0 && upper_left_border >= side_length) {  // update left_border until we reach the left or top border
+    upper_left_border -= (side_length + 1);
   }
-  for (j = Math.max(left_border, i - streak_req * (side_length + 1)); j < i; j += (side_length + 1)) {
+  let lower_right_border = i;
+  while (lower_right_border < num_squares - side_length && lower_right_border % side_length !== side_length - 1) {
+    lower_right_border += (side_length + 1);
+  }
+  for (j = Math.max(upper_left_border, i - streak_req * (side_length + 1)); j <= Math.min(i, lower_right_border - (streak_req - 1) * (side_length + 1)); j += (side_length + 1)) {
     for (arr of patterns_by_threat_level[threat_level]) {
       pattern = arr[0];
       possible_plays = arr[1];
@@ -307,18 +317,48 @@ const addPlayerMove = i => {
 
 const find_neighbors = i => {
   let arr = [];
-  if (i - side_length >= 0) {
-    arr.push(i - side_length);  // upper neighbor
+  let up, low, left, right, up_left, up_right, low_left, low_right;
+  up = i - side_length;
+  low = i + side_length;
+  left = i - 1;
+  right = i + 1;
+  up_left = up - 1;
+  up_right = up + 1;
+  low_left = low - 1;
+  low_right = low + 1;
+
+  const border_conditions = {
+    "up": up >= 0,
+    "low": low < num_squares,
+    "left": i % side_length !== 0,
+    "right": right % side_length !== 0,
+  };
+
+  if (border_conditions["up"] && all_plays[up] === "") {
+    arr.push(up);
   }
-  if (i + side_length < num_squares) {
-    arr.push(i + side_length);  // lower neighbor
+  if (border_conditions["low"] && all_plays[low] == "") {
+    arr.push(low);
   }
-  if (i % side_length !== 0) {
-    arr.push(i - 1);  // left neighbor
+  if (border_conditions["left"] && all_plays[left] === "") {
+    arr.push(left);
   }
-  if ((i + 1) % side_length !== 0) {
-    arr.push(i + 1);  // right neighbor
+  if (border_conditions["right"] && all_plays[right] === "") {
+    arr.push(right);
   }
+  if (border_conditions["up"] && border_conditions["left"] && all_plays[up_left] === "") {
+    arr.push(up_left);
+  }
+  if (border_conditions["up"] && border_conditions["right"] && all_plays[up_right] == "") {
+    arr.push(up_right);
+  }
+  if (border_conditions["low"] && border_conditions["left"] && all_plays[low_left] === "") {
+    arr.push(low_left);
+  }
+  if (border_conditions["low"] && border_conditions["right"] && all_plays[low_right] === "") {
+    arr.push(low_right);
+  }
+
   return arr;
 };
 
@@ -328,15 +368,18 @@ const addComputerMove = () => {
   if (!is_board_full) {
     let threat_responses = check_for_threats(last_player_move, required_streak);
     if (threat_responses !== null) {
+      console.log("THREAT AVERTED");
       selected = threat_responses;
     }
     else {
       neighbors = find_neighbors(last_player_move)
       if (neighbors.length !== 0) {
+        console.log("NEIGHBOR FOUND");
         selected = neighbors[0];
       }
       else {
         do {
+          console.log("RANDOM SQUARE CHOSEN");
           selected = Math.floor(Math.random() * num_squares);
         } 
         while (all_plays[selected] != "");
