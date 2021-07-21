@@ -6,7 +6,7 @@ const play_area_length = 600;
 
 const player = "O";
 const computer = "X";
-const side_length = 16;
+const side_length = 19;
 const num_squares = Math.pow(side_length, 2);
 const required_streak = 5;
 
