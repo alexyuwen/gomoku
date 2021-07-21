@@ -361,21 +361,17 @@ const render_board = () => {
 };
 
 
-const modal = document.getElementById("myModal");
+const modal = document.getElementById("modal_popup");
 const rules_button = document.getElementById("rules_button");
-// Get the <span> element that closes the modal
 const span = document.getElementsByClassName("close")[0];
-
 rules_button.onclick = () => {
   modal.style.display = "block";
 }
-
-// When the user clicks on <span> (x), close the modal
+// Close popup when user clicks on "x"
 span.onclick = () => {
   modal.style.display = "none";
 }
-
-// When the user clicks anywhere outside of the modal, close it
+// Close popup when user clicks anywhere outside popup
 window.onclick = event => {
   if (event.target == modal) {
     modal.style.display = "none";
