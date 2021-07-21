@@ -1,5 +1,6 @@
 // import { patterns_by_threat_level } from "./utils.js";
 
+document = window.document;
 
 const play_area_length = 600;
 
