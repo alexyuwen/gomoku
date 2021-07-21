@@ -1,8 +1,11 @@
+// import { patterns_by_threat_level } from "./utils.js";
+
+
 const play_area_length = 600;
 
 const player = "O";
 const computer = "X";
-const side_length = 12;
+const side_length = 16;
 const num_squares = Math.pow(side_length, 2);
 const required_streak = 5;
 
@@ -10,7 +13,7 @@ let is_board_full = false;
 let all_plays = new Array(num_squares).fill("");
 let last_player_move = -1;
 
-// Currently focusing on Threat Level 1 patterns
+
 const patterns_by_threat_level = {
   1: [
     [["", "O", "O", "O", "O"], [0]],  // closed 4
@@ -322,6 +325,7 @@ const addComputerMove = () => {
   }
 };
 
+
 const reset_board = () => {
   all_plays = new Array(num_squares).fill("");
   is_board_full = false;
@@ -355,6 +359,28 @@ const render_board = () => {
   }
   create_grid();
 };
+
+
+const modal = document.getElementById("myModal");
+const rules_button = document.getElementById("rules_button");
+// Get the <span> element that closes the modal
+const span = document.getElementsByClassName("close")[0];
+
+rules_button.onclick = () => {
+  modal.style.display = "block";
+}
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = () => {
+  modal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = event => {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
 
 
 board.style["gridTemplateColumns"] = "auto ".repeat(side_length).slice(0, -1);
