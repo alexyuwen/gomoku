@@ -304,18 +304,43 @@ const addPlayerMove = i => {
   }
 };
 
+
+const find_neighbors = i => {
+  let arr = [];
+  if (i - side_length >= 0) {
+    arr.push(i - side_length);  // upper neighbor
+  }
+  if (i + side_length < num_squares) {
+    arr.push(i + side_length);  // lower neighbor
+  }
+  if (i % side_length !== 0) {
+    arr.push(i - 1);  // left neighbor
+  }
+  if ((i + 1) % side_length !== 0) {
+    arr.push(i + 1);  // right neighbor
+  }
+  return arr;
+};
+
+
 const addComputerMove = () => {
-  let block_played;
+  let block_played, selected, neighbors;
   if (!is_board_full) {
     let threat_responses = check_for_threats(last_player_move, required_streak);
     if (threat_responses !== null) {
       selected = threat_responses;
     }
     else {
-      do {
-        selected = Math.floor(Math.random() * num_squares);
-      } 
-      while (all_plays[selected] != "");
+      neighbors = find_neighbors(last_player_move)
+      if (neighbors.length !== 0) {
+        selected = neighbors[0];
+      }
+      else {
+        do {
+          selected = Math.floor(Math.random() * num_squares);
+        } 
+        while (all_plays[selected] != "");
+      }
     }
 
     all_plays[selected] = computer;
